@@ -8,7 +8,7 @@ An R package for teaching simulation-based inference.
 
 ```r
 install.packages("remotes")
-remotes::install_github("YOUR_USERNAME/simInference")
+remotes::install_github("iga100/simInference")
 library(simInference)
 ```
 
