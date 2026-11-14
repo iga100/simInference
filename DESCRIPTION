@@ -1,7 +1,7 @@
 Package: simInference
 Title: Simulation-Based Statistical Inference for Teaching
 Version: 0.1.0
-Authors@R: person("Innocent", "Abaa", role = c("aut", "cre"), email = "REPLACE_WITH_YOUR_EMAIL@example.com")
+Authors@R: person("Innocent", "Abaa", role = c("aut", "cre"), email = "iga100@juniata.edu")
 Description: Teaching-oriented functions for simulation-based hypothesis tests,
     bootstrap confidence intervals, and chi-square simulation tests.
     Supports data-frame column expressions and ordinary vectors.
