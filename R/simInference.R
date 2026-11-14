@@ -2044,7 +2044,7 @@ randomization_two_mean_test <- function(
   class(ans) <- "bootstrap_ci_result"
   ans
 }
-
+#' @export
 print.bootstrap_ci_result <- function(x, ...) {
   cat(sprintf("%g%% bootstrap confidence intervals for %s\n",
               100 * x$conf.level, x$parameter))
@@ -2197,7 +2197,7 @@ bootstrap_two_mean_ci <- function(x, group, group1 = NULL, group2 = NULL,
                                   paste0(test, " (simulation)"))
   ans
 }
-
+#' @export
 print.chisq_sim_result <- function(x, ...) {
   cat(x$test, "\n", sep = "")
   cat(sprintf("Observed chi-square: %.4f\n", x$statistic))
