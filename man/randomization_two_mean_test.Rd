@@ -64,4 +64,3 @@ randomization_two_mean_test(
 Simulation results, including estimates, p-values,
 and confidence intervals when requested.
 }
-
