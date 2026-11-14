@@ -672,88 +672,15 @@ randomization_one_mean_test <- function(
   # Randomization p-value
   # ============================================================
   
-  if (alternative == "less") {
-    
-    # ----------------------------------------------------------
-    # LEFT-SIDED TEST
-    #
-    # H0: mu = mu0
-    # Ha: mu < mu0
-    #
-    # Count randomization means that are less than or equal
-    # to the observed sample mean.
-    # ----------------------------------------------------------
-    
-    cutoff <- xbar
-    
-    extreme_count <- sum(
-      mean_random <= cutoff
-    )
-    
-    p_value <- (
-      extreme_count + 1
-    ) / (
-      reps + 1
-    )
-    
-    
-  } else if (alternative == "greater") {
-    
-    # ----------------------------------------------------------
-    # RIGHT-SIDED TEST
-    #
-    # H0: mu = mu0
-    # Ha: mu > mu0
-    #
-    # Count randomization means that are greater than or equal
-    # to the observed sample mean.
-    # ----------------------------------------------------------
-    
-    cutoff <- xbar
-    
-    extreme_count <- sum(
-      mean_random >= cutoff
-    )
-    
-    p_value <- (
-      extreme_count + 1
-    ) / (
-      reps + 1
-    )
-    
-    
-  } else {
-    
-    # ----------------------------------------------------------
-    # TWO-SIDED TEST
-    #
-    # H0: mu = mu0
-    # Ha: mu != mu0
-    #
-    # Find the distance of the observed mean from H0.
-    # Count randomization means at least that far from mu0
-    # in either direction.
-    # ----------------------------------------------------------
-    
-    distance <- abs(
-      xbar - mu0
-    )
-    
-    lower_cutoff <- mu0 - distance
-    
-    upper_cutoff <- mu0 + distance
-    
-    extreme_count <- sum(
-      mean_random <= lower_cutoff |
-        mean_random >= upper_cutoff
-    )
-    
-    p_value <- (
-      extreme_count + 1
-    ) / (
-      reps + 1
-    )
-  }
+  # ============================================================
+  # Randomization p-value
+  # ============================================================
+  
+  extreme <- .is_extreme(mean_random, xbar, mu0, alternative)
+  
+  extreme_count <- sum(extreme)
+  
+  p_value <- (extreme_count + 1) / (reps + 1)
   
   
   # ============================================================
