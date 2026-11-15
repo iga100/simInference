@@ -1,6 +1,7 @@
+
 Package: simInference
 Title: Simulation-Based Statistical Inference for Teaching
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: person("Innocent", "Abaa", role = c("aut", "cre"), email = "iga100@juniata.edu")
 Description: Teaching-oriented functions for simulation-based hypothesis tests,
     bootstrap confidence intervals, and chi-square simulation tests.
@@ -10,6 +11,7 @@ Encoding: UTF-8
 Depends: R (>= 4.0.0)
 LazyData: false
 Config/roxygen2/version: 8.1.1
-Suggests: 
+Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+
