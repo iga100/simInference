@@ -156,11 +156,15 @@ randomization_one_prop_test <- function(
     p0,
     alternative = "two.sided",
     reps = 10000,
+    plot = FALSE,
     ci = FALSE,
     conf.level = 0.95,
     ci.method = c("percentile", "basic", "normal")
 ) {
   
+  if (!is.logical(plot) || length(plot) != 1L || is.na(plot)) {
+    stop("plot must be TRUE or FALSE.")
+  }
   alternative <- .check_alternative(alternative)
   reps <- .check_reps(reps)
   .check_ci_options(ci, conf.level, ci.method)
@@ -502,8 +506,10 @@ randomization_one_prop_test <- function(
   # ============================================================
   
   # Flag individual simulated outcomes, not histogram midpoints.
+  if (plot) {
   .plot_randomization_hist(p_random, extreme, p0, p_hat,
-                           alternative, "Randomized Sample Proportions", breaks = 30)
+                             alternative, "Randomized Sample Proportions", breaks = 30)
+  }
 
 
   # ============================================================
@@ -559,11 +565,15 @@ randomization_one_mean_test <- function(
     mu0,
     alternative = "two.sided",
     reps = 10000,
+    plot = FALSE,
     ci = FALSE,
     conf.level = 0.95,
     ci.method = c("percentile", "basic", "normal")
 ) {
   
+  if (!is.logical(plot) || length(plot) != 1L || is.na(plot)) {
+    stop("plot must be TRUE or FALSE.")
+  }
   alternative <- .check_alternative(alternative)
   reps <- .check_reps(reps)
   .check_ci_options(ci, conf.level, ci.method)
@@ -791,8 +801,10 @@ randomization_one_mean_test <- function(
   # ============================================================
   
   # Flag individual simulated outcomes, not histogram midpoints.
+  if (plot) {
   .plot_randomization_hist(mean_random, extreme, mu0, xbar,
-                           alternative, "Randomized Sample Means", breaks = 40)
+                             alternative, "Randomized Sample Means", breaks = 40)
+  }
 
 
   # ============================================================
@@ -851,11 +863,15 @@ randomization_two_prop_test <- function(
     group2 = NULL,
     alternative = "two.sided",
     reps = 10000,
+    plot = FALSE,
     ci = FALSE,
     conf.level = 0.95,
     ci.method = c("percentile", "basic", "normal")
 ) {
   
+  if (!is.logical(plot) || length(plot) != 1L || is.na(plot)) {
+    stop("plot must be TRUE or FALSE.")
+  }
   alternative <- .check_alternative(alternative)
   reps <- .check_reps(reps)
   .check_ci_options(ci, conf.level, ci.method)
@@ -1407,8 +1423,10 @@ randomization_two_prop_test <- function(
   # ============================================================
   
   # Flag individual simulated outcomes, not histogram midpoints.
+  if (plot) {
   .plot_randomization_hist(difference_random, extreme, 0, observed_difference,
-                           alternative, "Randomized Difference in Proportions", breaks = 30)
+                             alternative, "Randomized Difference in Proportions", breaks = 30)
+  }
 
 
   # ============================================================
@@ -1466,11 +1484,15 @@ randomization_two_mean_test <- function(
     group2 = NULL,
     alternative = "two.sided",
     reps = 10000,
+    plot = FALSE,
     ci = FALSE,
     conf.level = 0.95,
     ci.method = c("percentile", "basic", "normal")
 ) {
   
+  if (!is.logical(plot) || length(plot) != 1L || is.na(plot)) {
+    stop("plot must be TRUE or FALSE.")
+  }
   alternative <- .check_alternative(alternative)
   reps <- .check_reps(reps)
   .check_ci_options(ci, conf.level, ci.method)
@@ -1979,8 +2001,10 @@ randomization_two_mean_test <- function(
   # ============================================================
   
   # Flag individual simulated outcomes, not histogram midpoints.
+  if (plot) {
   .plot_randomization_hist(difference_random, extreme, 0, observed_difference,
-                           alternative, "Randomized Difference in Means", breaks = 40)
+                             alternative, "Randomized Difference in Means", breaks = 40)
+  }
 
 
   # ============================================================
@@ -2154,32 +2178,57 @@ bootstrap_two_mean_ci <- function(x, group, group1 = NULL, group2 = NULL,
 }
 
 .plot_chisq_simulation <- function(simulated, observed, title) {
+  # Focus on the simulated null distribution rather than stretching
+  # the axis to a potentially distant observed statistic.
   h <- hist(simulated, breaks = 30, plot = FALSE)
-  edges <- sort(unique(c(h$breaks, observed)))
-  bins <- findInterval(simulated, edges, rightmost.closed = TRUE)
-  # Values exactly equal to the cutoff belong to the extreme tail.
-  counts <- tabulate(bins, nbins = length(edges) - 1L)
-  extreme <- simulated >= observed - 64 * .Machine$double.eps *
+  edges <- h$breaks
+  lower <- min(edges)
+  upper <- max(edges)
+
+  # Split a bin at the observed cutoff when the cutoff is visible.
+  # This prevents a red bar from extending into the non-extreme region.
+  if (observed > lower && observed < upper) {
+    edges <- sort(unique(c(edges, observed)))
+  }
+
+  tolerance <- 64 * .Machine$double.eps *
     pmax(1, abs(simulated), abs(observed))
-  red <- tabulate(bins[extreme], nbins = length(edges) - 1L)
-  plot(range(edges), c(0, max(1, counts) * 1.12), type = "n",
-       xlab = expression("Simulated " * chi^2 * " statistic"),
+  extreme <- simulated >= observed - tolerance
+  bins <- findInterval(simulated, edges, rightmost.closed = TRUE)
+  counts <- tabulate(bins, nbins = length(edges) - 1L)
+  red_counts <- tabulate(bins[extreme], nbins = length(edges) - 1L)
+
+  plot(c(lower, upper), c(0, max(1, counts) * 1.18),
+       type = "n", xlab = expression("Simulated " * chi^2 * " statistic"),
        ylab = "Number of simulations", main = title, bty = "l")
+
   for (i in seq_along(counts)) {
-    if (counts[i] > 0) {
-      rect(edges[i], 0, edges[i+1L], counts[i],
+    if (counts[i] > 0L) {
+      rect(edges[i], 0, edges[i + 1L], counts[i],
            col = "lightgray", border = "white")
-      if (red[i] > 0) rect(edges[i], 0, edges[i+1L], red[i],
-                            col = "tomato", border = "white")
+      if (red_counts[i] > 0L) {
+        rect(edges[i], 0, edges[i + 1L], red_counts[i],
+             col = "tomato", border = "white")
+      }
     }
   }
-  abline(v = observed, col = "blue", lwd = 1.2)
-  legend("topright", legend = c("Extreme outcomes", "Other outcomes",
-                                 "Observed statistic"),
+
+  if (observed >= lower && observed <= upper) {
+    abline(v = observed, col = "blue", lwd = 1.5)
+  } else {
+    mtext(sprintf("Observed chi-square = %.4f (outside plotted range)",
+                  observed), side = 3, line = 0.2, cex = 0.75,
+          col = "blue")
+  }
+
+  p_value <- (sum(extreme) + 1) / (length(simulated) + 1)
+  legend("topright",
+         legend = c(sprintf("Extreme outcomes: %d / %d",
+                            sum(extreme), length(simulated)),
+                    "Other outcomes",
+                    sprintf("Simulation p-value: %.5f", p_value)),
          fill = c("tomato", "lightgray", NA),
-         border = c("white", "white", NA),
-         lty = c(NA, NA, 1), col = c(NA, NA, "blue"),
-         bty = "n", cex = 0.8)
+         border = c("white", "white", NA), bty = "n", cex = 0.8)
   invisible(NULL)
 }
 
@@ -2208,7 +2257,7 @@ print.chisq_sim_result <- function(x, ...) {
 
 # Goodness-of-fit: observed category counts, hypothesized probabilities.
 # If p0 is omitted, equal category probabilities are assumed.
-chisq_gof <- function(observed, p0 = NULL, reps = 10000, plot = TRUE) {
+chisq_gof <- function(observed, p0 = NULL, reps = 10000, plot = FALSE) {
   reps <- .check_reps(reps)
   if (!is.logical(plot) || length(plot) != 1L || is.na(plot))
     stop("plot must be TRUE or FALSE.")
@@ -2237,7 +2286,7 @@ chisq_gof <- function(observed, p0 = NULL, reps = 10000, plot = TRUE) {
 
 # Independence: two categorical vectors, or a contingency table.
 # Permuting one variable preserves the observed row/column totals.
-chisq_ind <- function(x, y = NULL, reps = 10000, plot = TRUE) {
+chisq_ind <- function(x, y = NULL, reps = 10000, plot = FALSE) {
   reps <- .check_reps(reps)
   if (!is.logical(plot) || length(plot) != 1L || is.na(plot))
     stop("plot must be TRUE or FALSE.")
@@ -2303,33 +2352,33 @@ chisq_ind <- function(x, y = NULL, reps = 10000, plot = TRUE) {
 }
 
 .original_randomization_one_prop_test <- randomization_one_prop_test
-randomization_one_prop_test <- function(x, success = 1, p0, alternative = "two.sided", reps = 10000, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
+randomization_one_prop_test <- function(x, success = 1, p0, alternative = "two.sided", reps = 10000, plot = FALSE, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
   caller <- parent.frame()
   resolved_x <- .resolve_sim_column(substitute(x), data, caller)
-  .original_randomization_one_prop_test(x = resolved_x, success = success, p0 = p0, alternative = alternative, reps = reps, ci = ci, conf.level = conf.level, ci.method = ci.method)
+  .original_randomization_one_prop_test(x = resolved_x, success = success, p0 = p0, alternative = alternative, reps = reps, plot = plot, ci = ci, conf.level = conf.level, ci.method = ci.method)
 }
 
 .original_randomization_one_mean_test <- randomization_one_mean_test
-randomization_one_mean_test <- function(x, mu0, alternative = "two.sided", reps = 10000, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
+randomization_one_mean_test <- function(x, mu0, alternative = "two.sided", reps = 10000, plot = FALSE, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
   caller <- parent.frame()
   resolved_x <- .resolve_sim_column(substitute(x), data, caller)
-  .original_randomization_one_mean_test(x = resolved_x, mu0 = mu0, alternative = alternative, reps = reps, ci = ci, conf.level = conf.level, ci.method = ci.method)
+  .original_randomization_one_mean_test(x = resolved_x, mu0 = mu0, alternative = alternative, reps = reps, plot = plot, ci = ci, conf.level = conf.level, ci.method = ci.method)
 }
 
 .original_randomization_two_prop_test <- randomization_two_prop_test
-randomization_two_prop_test <- function(x, group, success = 1, group1 = NULL, group2 = NULL, alternative = "two.sided", reps = 10000, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
+randomization_two_prop_test <- function(x, group, success = 1, group1 = NULL, group2 = NULL, alternative = "two.sided", reps = 10000, plot = FALSE, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
   caller <- parent.frame()
   resolved_x <- .resolve_sim_column(substitute(x), data, caller)
   resolved_group <- .resolve_sim_column(substitute(group), data, caller)
-  .original_randomization_two_prop_test(x = resolved_x, group = resolved_group, success = success, group1 = group1, group2 = group2, alternative = alternative, reps = reps, ci = ci, conf.level = conf.level, ci.method = ci.method)
+  .original_randomization_two_prop_test(x = resolved_x, group = resolved_group, success = success, group1 = group1, group2 = group2, alternative = alternative, reps = reps, plot = plot, ci = ci, conf.level = conf.level, ci.method = ci.method)
 }
 
 .original_randomization_two_mean_test <- randomization_two_mean_test
-randomization_two_mean_test <- function(x, group, group1 = NULL, group2 = NULL, alternative = "two.sided", reps = 10000, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
+randomization_two_mean_test <- function(x, group, group1 = NULL, group2 = NULL, alternative = "two.sided", reps = 10000, plot = FALSE, ci = FALSE, conf.level = 0.95, ci.method = c("percentile", "basic", "normal"), data = NULL) {
   caller <- parent.frame()
   resolved_x <- .resolve_sim_column(substitute(x), data, caller)
   resolved_group <- .resolve_sim_column(substitute(group), data, caller)
-  .original_randomization_two_mean_test(x = resolved_x, group = resolved_group, group1 = group1, group2 = group2, alternative = alternative, reps = reps, ci = ci, conf.level = conf.level, ci.method = ci.method)
+  .original_randomization_two_mean_test(x = resolved_x, group = resolved_group, group1 = group1, group2 = group2, alternative = alternative, reps = reps, plot = plot, ci = ci, conf.level = conf.level, ci.method = ci.method)
 }
 
 .original_bootstrap_one_prop_ci <- bootstrap_one_prop_ci
@@ -2363,17 +2412,16 @@ bootstrap_two_mean_ci <- function(x, group, group1 = NULL, group2 = NULL, reps =
 }
 
 .original_chisq_gof <- chisq_gof
-chisq_gof <- function(observed, p0 = NULL, reps = 10000, plot = TRUE, data = NULL) {
+chisq_gof <- function(observed, p0 = NULL, reps = 10000, plot = FALSE, data = NULL) {
   caller <- parent.frame()
   resolved_observed <- .resolve_sim_column(substitute(observed), data, caller)
   .original_chisq_gof(observed = resolved_observed, p0 = p0, reps = reps, plot = plot)
 }
 
 .original_chisq_ind <- chisq_ind
-chisq_ind <- function(x, y = NULL, reps = 10000, plot = TRUE, data = NULL) {
+chisq_ind <- function(x, y = NULL, reps = 10000, plot = FALSE, data = NULL) {
   caller <- parent.frame()
   resolved_x <- .resolve_sim_column(substitute(x), data, caller)
   resolved_y <- if (missing(y) || identical(substitute(y), quote(NULL))) NULL else .resolve_sim_column(substitute(y), data, caller)
   .original_chisq_ind(x = resolved_x, y = resolved_y, reps = reps, plot = plot)
 }
-
