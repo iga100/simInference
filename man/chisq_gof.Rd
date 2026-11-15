@@ -115,12 +115,45 @@ chisq_gof(
 }
 
 \value{
-  Simulation-based goodness-of-fit test results,
-  including the observed Pearson chi-square statistic,
-  simulation p-value, and number of extreme simulations.
+  An object of class \code{"chisq_sim_result"} containing
+  the following components:
 
-  The result also provides information about the
-  simulated null distribution.
+  \describe{
+    \item{test}{
+      Character string identifying the statistical test.
+    }
+
+    \item{statistic}{
+      Observed Pearson chi-square goodness-of-fit statistic.
+    }
+
+    \item{p_value}{
+      Simulation-based p-value for the test.
+    }
+
+    \item{extreme_count}{
+      Number of simulated chi-square statistics at least
+      as large as the observed statistic.
+    }
+
+    \item{reps}{
+      Number of simulations performed.
+    }
+
+    \item{observed}{
+      Numeric vector containing the observed category counts.
+    }
+
+    \item{expected}{
+      Numeric vector containing the expected category counts
+      under the null hypothesis.
+    }
+
+    \item{simulated_statistics}{
+      Numeric vector containing the simulated chi-square
+      statistics used to estimate the p-value.
+    }
+  }
 }
 
 \examples{
@@ -158,5 +191,10 @@ result <- chisq_gof(
   reps = 1000
 )
 
-str(result)
+result$statistic
+result$p_value
+result$extreme_count
+result$observed
+result$expected
+result$simulated_statistics
 }
